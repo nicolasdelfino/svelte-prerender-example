@@ -1,15 +1,15 @@
 import App from "./App.svelte";
 
-const target = document.getElementById("app");
+const target = document.getElementById("fragment");
 
 target.innerHTML = "";
 
 const app = new App({
   target,
   props: {
-    name: "world"
+    name: "LEO",
   },
-  hydrate: true
+  hydrate: true,
 });
 
 export default app;

@@ -2,24 +2,38 @@ const fs = require("fs");
 const path = require("path");
 const rimraf = require("rimraf");
 const minify = require("html-minifier").minify;
+const FConfig = require('../fragment.config.json');
 
-const App = require(path.resolve(process.cwd(), "public/.temp/ssr.js"));
+const { dist, name } = FConfig;
 
-const { html, css } = App.render({ name: "world" });
+const App = require(path.resolve(process.cwd(), `${FConfig.dist}/.temp/ssr.js`));
 
-const template = fs.readFileSync(
-  path.resolve(process.cwd(), "public/index.html"),
+const baseTemplate = fs.readFileSync(
+  path.resolve(process.cwd(), "src/template.html"),
   "utf-8"
 );
+
+const { html, css } = App.render({ name: 'test prop' });
 
 const minifiedHtml = minify(html, {
   collapseWhitespace: true
 });
 
-const result = template.replace(
-  "<!-- PRERENDER -->",
-  `<style>${css.code}</style>${minifiedHtml}`
-);
+const markup = baseTemplate.replace(
+  "<!-- fragment-markup -->",
+  minifiedHtml
+)
 
-fs.writeFileSync(path.resolve(process.cwd(), "public/index.html"), result);
-rimraf.sync(path.resolve(process.cwd(), "public/.temp"));
+// css
+const cssInclude = `<link rel="stylesheet" href="/${FConfig.name}.css" />`
+fs.writeFileSync(path.resolve(process.cwd(), `${FConfig.dist}/${FConfig.name}.css`), css.code);
+fs.writeFileSync(path.resolve(process.cwd(), `${FConfig.dist}/${FConfig.name}.css.html`), cssInclude);
+
+// js
+const jsInclude = `<script type="text/javascript" src="/${FConfig.name}.js"></script>`
+fs.writeFileSync(path.resolve(process.cwd(), `${FConfig.dist}/${FConfig.name}.js.html`), jsInclude);
+
+// markup
+fs.writeFileSync(path.resolve(process.cwd(), `${FConfig.dist}/${FConfig.name}.html`), markup);
+
+rimraf.sync(path.resolve(process.cwd(), `${FConfig.dist}/.temp`));

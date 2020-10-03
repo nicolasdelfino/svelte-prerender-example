@@ -2,23 +2,27 @@ import svelte from "rollup-plugin-svelte";
 import resolve from "rollup-plugin-node-resolve";
 import commonjs from "rollup-plugin-commonjs";
 import execute from "rollup-plugin-execute";
-import html from "rollup-plugin-bundle-html";
+import FConfig from './fragment.config.json'
+import sveltePreprocess from 'svelte-preprocess';
+import typescript from '@rollup/plugin-typescript';
 
 const production = !process.env.ROLLUP_WATCH;
+const { dist, name } = FConfig;
 
 export default [
   {
-    input: "src/main.js",
+    input: "src/main.ts",
     output: {
-      sourcemap: true,
+      sourcemap: false,
       format: "iife",
       name: "app",
-      file: "public/bundle.js"
+      file: `${dist}/${name}.js`
     },
     plugins: [
       svelte({
         dev: !production,
-        hydratable: true
+        hydratable: true,
+        preprocess: sveltePreprocess(),
       }),
       resolve({
         browser: true,
@@ -26,23 +30,20 @@ export default [
           importee === "svelte" || importee.startsWith("svelte/")
       }),
       commonjs(),
-      html({
-        template: "src/template.html",
-        dest: "public",
-        filename: "index.html",
-        inject: "body"
-      })
+      typescript({
+        sourceMap: !production,
+        inlineSources: !production
+      }),
     ]
   },
   {
     input: "src/App.svelte",
     output: {
       format: "cjs",
-      file: "public/.temp/ssr.js"
+      file: `${dist}/.temp/ssr.js`
     },
     plugins: [
       svelte({
-        // enable run-time checks when not in production
         dev: !production,
         generate: "ssr"
       }),
